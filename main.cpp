@@ -13,7 +13,7 @@
 using namespace std;
 
 const int directions[8][2] = {{-1,1}, {0,1}, {1,1}, {-1,0}, {1,0}, {-1,-1}, {0,-1}, {1,-1}};
-const int deadOrAlive[8] = {-1,-1,0,1,-1,-1,0,-1};
+const int deadOrAlive[8] = {-1,-1,0,1,-1,-1,-1,-1};
 
 bool add(int k, int n) {
     if (n+k > 0) {
