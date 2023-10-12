@@ -12,77 +12,82 @@
 
 using namespace std;
 
+const int directions[8][2] = {{-1,1}, {0,1}, {1,1}, {-1,0}, {1,0}, {-1,-1}, {0,-1}, {1,-1}};
+const int deadOrAlive[8] = {-1,-1,0,1,-1,-1,0,-1};
+
+bool add(int k, int n) {
+    if (n+k > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool nextGenerationAlive(array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH>& game, int x, int y) {
+    int neighbours = 0;
+
+    for (int i=0; i<8; i++) {
+        if (game[x - directions[i][0]][y - directions[i][1]] == 1) {
+            neighbours++;
+        }
+    }
+
+    /*if (neighbours < 2) {
+        return false;
+    }
+
+    if (game[x][y] && (neighbours == 2 || neighbours == 3)) {
+        return true;
+    }
+
+    if (neighbours > 3) {
+        return false;
+    }
+
+    if (!game[x][y] && neighbours == 3) {
+        return true;
+    }
+    */
+
+    return add(game[x][y], deadOrAlive[neighbours]);
+}
+
 int main(int argc, char** args) {
+    int myint = 0;
+    cout << myint -1 << endl;
+    Screen screen;
+    array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH> display {};
+    array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH> swap {};
 
-    // Pointers to our window and surface
-    SDL_Window* window = NULL;
-    SDL_Renderer* renderer = NULL;
-
-    // Initialize SDL. SDL_Init will return -1 if it fails.
-    if ( SDL_Init( SDL_INIT_EVERYTHING ) < 0 ) {
-        cout << "Error initializing SDL: " << SDL_GetError() << endl;
-        system("pause");
-        // End the program
-
-        return 1;
+    for(auto& row : display) {
+        generate(row.begin(), row.end(), []() {return rand() % 10 == 0 ? 1 : 0; });
     }
 
-    // Create our window
-    SDL_CreateWindowAndRenderer(800, 600, 0, &window, &renderer);
-    //window = SDL_CreateWindow( "Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
-    //renderer = SDL_CreateRenderer(window, -1, 0);
-    SDL_RenderSetScale(renderer, SCALE, SCALE);
-
-    // Make sure creating the window succeeded
-    if ( !window ) {
-        cout << "Error creating window: " << SDL_GetError()  << endl;
-        system("pause");
-        // End the program
-        return 1;
-    }
-
-    SDL_RenderClear(renderer);
-
-    srand(time(NULL));
-
-	int close = 0;
-    int time = 0;
-	while (!close) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-			case SDL_QUIT:
-				close = 1;
-				break;
-            default:
-                continue;
-                break;
-            }
-		}
-
-
-
-        for (int x=0; x < WINDOW_WIDTH/SCALE; x++) {
-            for (int y=0; y < WINDOW_HEIGHT/SCALE; y++) {
-            SDL_SetRenderDrawColor(renderer, x + (time%255),y+ (time%255),(time)%255,255);
-                SDL_RenderDrawPoint(renderer, x, y);
+    while(true)
+    {
+        for (int i=0; i< WINDOW_WIDTH; ++i) {
+            for (int j=0; j < WINDOW_HEIGHT; j++){
+                swap[i][j] = int(nextGenerationAlive(display, i, j));
             }
         }
 
-        time++;
+        for (int x=0; x < WINDOW_WIDTH; ++x) {
+            for (int y=0; y < WINDOW_HEIGHT; ++y) {
+                if (swap[x][y]) {
+                    screen.drawPixel(x, y);
+                }
+            }
+        }
 
-        SDL_RenderPresent(renderer);
+        copy(swap.begin(), swap.end(), display.begin());
 
-		// calculates to 60 fps
-		SDL_Delay(1000 / 60);
-	}
+        screen.update();
+        SDL_Delay(1000/120);
+        screen.input();
+        screen.clearPixels();
+    }
 
-    // Destroy the window. This will also destroy the surface
-    SDL_DestroyWindow( window );
 
-    // Quit SDL
-    SDL_Quit();
 
-    // End the program
     return 0;
 }
