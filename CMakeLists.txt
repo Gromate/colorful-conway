@@ -9,8 +9,10 @@ find_package(SDL2 REQUIRED)
 add_definitions("-Wall")
 include_directories(${SDL2_INCLUDE_DIR})
 
+
 add_executable(conway main.cpp)
 
+set_property(TARGET conway PROPERTY CXX_STANDARD 17)
 install(TARGETS conway RUNTIME DESTINATION bin)
 
 target_link_libraries(conway ${SDL2_LIBRARIES})

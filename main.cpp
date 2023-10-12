@@ -1,9 +1,17 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <random>
+#include "screen.h"
+
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+#define SCALE 4
+
+#define RANDCOLOR rand()%255
 
 using namespace std;
 
-// You must include the command line parameters for your main function to be recognized by SDL
 int main(int argc, char** args) {
 
     // Pointers to our window and surface
@@ -15,10 +23,10 @@ int main(int argc, char** args) {
         cout << "Error initializing SDL: " << SDL_GetError() << endl;
         system("pause");
         // End the program
+
         return 1;
     }
 
-#define SCALE 4
     // Create our window
     SDL_CreateWindowAndRenderer(800, 600, 0, &window, &renderer);
     //window = SDL_CreateWindow( "Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN );
@@ -33,12 +41,12 @@ int main(int argc, char** args) {
         return 1;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0,0,0,255);
     SDL_RenderClear(renderer);
 
-    int x = 0;
-    int y = 0;
+    srand(time(NULL));
+
 	int close = 0;
+    int time = 0;
 	while (!close) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
@@ -53,17 +61,20 @@ int main(int argc, char** args) {
 		}
 
 
-		SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-        SDL_RenderDrawPoint(renderer, x, y);
+
+        for (int x=0; x < WINDOW_WIDTH/SCALE; x++) {
+            for (int y=0; y < WINDOW_HEIGHT/SCALE; y++) {
+            SDL_SetRenderDrawColor(renderer, x + (time%255),y+ (time%255),(time)%255,255);
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
+        }
+
+        time++;
 
         SDL_RenderPresent(renderer);
-        x++;
-        y++;
-
-
 
 		// calculates to 60 fps
-		SDL_Delay(1000 / 30);
+		SDL_Delay(1000 / 60);
 	}
 
     // Destroy the window. This will also destroy the surface
