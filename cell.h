@@ -8,10 +8,7 @@ class Cell {
 public:
     int aliveness = 0;
     SDL_Color color;
-    int age = 0;
-    int red = 0;
-    int green = 0;
-    int blue = 0;
+    long int age = 0;
 
     Cell() {
         aliveness = 0;
@@ -28,7 +25,7 @@ public:
         this->age = age;
     }
 
-    Cell(int aliveness, int age, SDL_Color color) {
+    Cell(int aliveness, long int age, SDL_Color color) {
         this->aliveness = aliveness;
         this->color = color;
         this->age = age;
@@ -51,9 +48,6 @@ public:
     }
 
     void updateColor() {
-        red = age;
-        blue = 255;
-        green = 100;
-        this->color = SDL_Color{Uint8(red), Uint8(this->getAge()), 255};
+        this->color = SDL_Color{255, Uint8(this->getAge()), 255};
     }
 };
