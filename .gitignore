@@ -1,0 +1,9 @@
+.kdev4/
+.vscode/
+build/
+CMakeFiles/
+CMakeCache.txt
+main
+main.o
+cmake_install.cmake
+Conway.kdev4

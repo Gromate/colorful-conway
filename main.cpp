@@ -2,11 +2,12 @@
 #include <SDL2/SDL.h>
 #include <random>
 #include "screen.h"
-
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#include "cell.h"
 
 #define SCALE 4
+
+#define WINDOW_WIDTH 800/SCALE
+#define WINDOW_HEIGHT 600/SCALE
 
 #define RANDCOLOR rand()%255
 
@@ -14,6 +15,7 @@ using namespace std;
 
 const int directions[8][2] = {{-1,1}, {0,1}, {1,1}, {-1,0}, {1,0}, {-1,-1}, {0,-1}, {1,-1}};
 const int deadOrAlive[8] = {-1,-1,0,1,-1,-1,-1,-1};
+
 
 bool add(int k, int n) {
     if (n+k > 0) {
@@ -23,11 +25,11 @@ bool add(int k, int n) {
     }
 }
 
-bool nextGenerationAlive(array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH>& game, int x, int y) {
+bool nextGenerationAlive(array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH>& game, int x, int y) {
     int neighbours = 0;
 
     for (int i=0; i<8; i++) {
-        if (game[x - directions[i][0]][y - directions[i][1]] == 1) {
+        if (game[x - directions[i][0]][y - directions[i][1]].aliveness == 1) {
             neighbours++;
         }
     }
@@ -49,42 +51,72 @@ bool nextGenerationAlive(array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH>& game, i
     }
     */
 
-    return add(game[x][y], deadOrAlive[neighbours]);
+    //random_device rd;  
+    //uniform_int_distribution<> percent(1, 1000);
+    //const int liveChance = 99;
+    //const int spontaneusAlive = 75;
+    //if (percent(rd) == 1) {
+        //return true;
+    //}
+
+    //if (rand()%liveChance) {
+        return add(game[x][y].aliveness, deadOrAlive[neighbours]);
+    //} else {
+        //return false;
+    //}
 }
 
 int main(int argc, char** args) {
-    int myint = 0;
-    cout << myint -1 << endl;
+    srand(time(0));
     Screen screen;
-    array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH> display {};
-    array<array<int, WINDOW_HEIGHT>, WINDOW_WIDTH> swap {};
+    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> display {};
+    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> swap {};
 
-    for(auto& row : display) {
-        generate(row.begin(), row.end(), []() {return rand() % 10 == 0 ? 1 : 0; });
+    for (auto& row : display) {
+        for (auto& cell : row) {
+            cell = Cell(rand()%10 ? 1 : 0);
+            cell.updateColor();
+        }
     }
+    /*for(auto& row : display) {
+        generate(row.begin(), row.end(), []() {return rand() % 10 == 0 ? 1 : 0; });
+    }*/
 
     while(true)
     {
-        for (int i=0; i< WINDOW_WIDTH; ++i) {
-            for (int j=0; j < WINDOW_HEIGHT; j++){
-                swap[i][j] = int(nextGenerationAlive(display, i, j));
+        for (int x=0; x< WINDOW_WIDTH; x++) {
+            for (int y=0; y < WINDOW_HEIGHT; y++){
+                swap[x][y] = Cell(int(nextGenerationAlive(display, x, y)), display[x][y].getAge(), display[x][y].getColor());
+                swap[x][y].upAge();
+                swap[x][y].updateColor();
             }
         }
 
-        for (int x=0; x < WINDOW_WIDTH; ++x) {
-            for (int y=0; y < WINDOW_HEIGHT; ++y) {
-                if (swap[x][y]) {
-                    screen.drawPixel(x, y);
+        const int number = 100;
+        cout << swap[number][number].age << " " << display[number][number].age << endl;
+
+        uint8_t red = 0;
+        for (int x=0; x < WINDOW_WIDTH; x++) {
+            for (int y=0; y < WINDOW_HEIGHT; y++) {
+                if (display[x][y].aliveness) {
+                    cout << "age" << display[x][y].getAge() << endl;
+                    if (int(display[x][y].getAge()) >= 2) {
+                        red = 255;
+                    }
+                    screen.drawPixel(x, y, uint8_t(red), display[x][y].green, display[x][y].blue, display[x][y].color.a);
                 }
             }
         }
 
-        copy(swap.begin(), swap.end(), display.begin());
+        //copy(swap.begin(), swap.end(), display.begin());
+        //display = swap;
 
         screen.update();
-        SDL_Delay(1000/120);
+        SDL_Delay(1000/5);
         screen.input();
         screen.clearPixels();
+
+        display.swap(swap);
     }
 
 
