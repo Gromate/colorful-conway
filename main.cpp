@@ -1,125 +1,149 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <algorithm>
 #include <random>
-#include "screen.h"
+#include <array>
 #include "cell.h"
 
 #define SCALE 4
 
-#define WINDOW_WIDTH 800/SCALE
-#define WINDOW_HEIGHT 600/SCALE
+#define WINDOW_WIDTH 1200 / SCALE
+#define WINDOW_HEIGHT 600 / SCALE
 
-#define RANDCOLOR rand()%255
+#define RANDCOLOR rand() % 255
 
 using namespace std;
 
-const int directions[8][2] = {{-1,1}, {0,1}, {1,1}, {-1,0}, {1,0}, {-1,-1}, {0,-1}, {1,-1}};
-const int deadOrAlive[8] = {-1,-1,0,1,-1,-1,-1,-1};
+SDL_Color ageToColor(long int age);
 
+const int directions[8][2] = {{-1, 1}, {0, 1}, {1, 1}, {-1, 0}, {1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+const int deadOrAlive[8] = {-1, -1, 0, 1, -1, -1, -1, -1};
 
-bool add(int k, int n) {
-    if (n+k > 0) {
+bool add(int k, int n)
+{
+    if (n + k > 0)
+    {
         return true;
-    } else {
+    }
+    else
+    {
         return false;
     }
 }
 
-bool nextGenerationAlive(array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH>& game, int x, int y) {
+bool nextGenerationAlive(array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> &game, int x, int y)
+{
     int neighbours = 0;
 
-    for (int i=0; i<8; i++) {
-        if (game[x - directions[i][0]][y - directions[i][1]].aliveness == 1) {
+    for (int i = 0; i < 8; i++)
+    {
+        if (game[x - directions[i][0]][y - directions[i][1]].aliveness == 1)
+        {
             neighbours++;
         }
     }
 
-    /*if (neighbours < 2) {
-        return false;
-    }
-
-    if (game[x][y] && (neighbours == 2 || neighbours == 3)) {
-        return true;
-    }
-
-    if (neighbours > 3) {
-        return false;
-    }
-
-    if (!game[x][y] && neighbours == 3) {
-        return true;
-    }
-    */
-
-    //random_device rd;  
-    //uniform_int_distribution<> percent(1, 1000);
-    //const int liveChance = 99;
-    //const int spontaneusAlive = 75;
-    //if (percent(rd) == 1) {
-        //return true;
+    // random_device rd;
+    // uniform_int_distribution<> percent(1, 1000);
+    // const int liveChance = 99;
+    // const int spontaneusAlive = 75;
+    // if (percent(rd) == 1) {
+    // return true;
     //}
 
-    //if (rand()%liveChance) {
-        return add(game[x][y].aliveness, deadOrAlive[neighbours]);
+    // if (rand()%liveChance) {
+    return add(game[x][y].aliveness, deadOrAlive[neighbours]);
     //} else {
-        //return false;
+    // return false;
     //}
 }
 
-int main(int argc, char** args) {
-    srand(time(0));
-    Screen screen;
-    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> display {};
-    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> swap {};
+int main(int argc, char **args)
+{
+    SDL_Window *window;
+    SDL_Renderer *renderer;
 
-    for (auto& row : display) {
-        for (auto& cell : row) {
-            cell = Cell(rand()%10 ? 1 : 0);
+    SDL_Event event;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer(WINDOW_WIDTH * SCALE, WINDOW_HEIGHT * SCALE, 0, &window, &renderer);
+    SDL_RenderSetScale(renderer, SCALE, SCALE);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+
+    srand(time(0));
+    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> display{};
+    array<array<Cell, WINDOW_HEIGHT>, WINDOW_WIDTH> swap{};
+
+    for (auto &row : display)
+    {
+        for (auto &cell : row)
+        {
+            cell = Cell(rand() % 10 ? 1 : 0);
             cell.updateColor();
         }
     }
-    /*for(auto& row : display) {
-        generate(row.begin(), row.end(), []() {return rand() % 10 == 0 ? 1 : 0; });
-    }*/
 
-    while(true)
+    while (true)
     {
-        for (int x=0; x< WINDOW_WIDTH; x++) {
-            for (int y=0; y < WINDOW_HEIGHT; y++){
+        for (int x = 0; x < WINDOW_WIDTH; x++)
+        {
+            for (int y = 0; y < WINDOW_HEIGHT; y++)
+            {
                 swap[x][y] = Cell(int(nextGenerationAlive(display, x, y)), display[x][y].getAge(), display[x][y].getColor());
                 swap[x][y].upAge();
                 swap[x][y].updateColor();
             }
         }
 
-        const int number = 100;
-        cout << swap[number][number].age << " " << display[number][number].age << endl;
+        for (int x = 0; x < WINDOW_WIDTH; x++)
+        {
+            for (int y = 0; y < WINDOW_HEIGHT; y++)
+            {
+                if (display[x][y].aliveness)
+                {
+                    SDL_Color color = ageToColor(display[x][y].age * 50);
+                    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 
-        uint8_t red = 0;
-        for (int x=0; x < WINDOW_WIDTH; x++) {
-            for (int y=0; y < WINDOW_HEIGHT; y++) {
-                if (display[x][y].aliveness) {
-                    cout << "age" << display[x][y].getAge() << endl;
-                    if (int(display[x][y].getAge()) >= 2) {
-                        red = 255;
-                    }
-                    screen.drawPixel(x, y, uint8_t(red), display[x][y].green, display[x][y].blue, display[x][y].color.a);
+                    SDL_RenderDrawPoint(renderer, x, y);
                 }
             }
         }
 
-        //copy(swap.begin(), swap.end(), display.begin());
-        //display = swap;
+        SDL_RenderPresent(renderer);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
 
-        screen.update();
-        SDL_Delay(1000/5);
-        screen.input();
-        screen.clearPixels();
+        SDL_Delay(1000 / 60);
 
         display.swap(swap);
+
+        while (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+            /* SDL_QUIT event (window close) */
+            case SDL_QUIT:
+                SDL_Quit();
+                exit(0);
+                break;
+
+            default:
+                break;
+            }
+        }
     }
-
-
-
     return 0;
+}
+
+SDL_Color ageToColor(long int age)
+{
+    SDL_Color color;
+    color.r = 255;
+    color.g = age % 255;
+    color.b = age / 255 % 256;
+    color.a = 255;
+
+    return color;
 }
