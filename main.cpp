@@ -123,7 +123,6 @@ int main(int argc, char **args)
         {
             switch (event.type)
             {
-            /* SDL_QUIT event (window close) */
             case SDL_QUIT:
                 SDL_Quit();
                 exit(0);
