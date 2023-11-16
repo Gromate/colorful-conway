@@ -7,3 +7,5 @@ main
 main.o
 cmake_install.cmake
 Conway.kdev4
+screen.h
+screen.h
